@@ -20,6 +20,7 @@
 html{scroll-padding-top:env(safe-area-inset-top,0px);scroll-behavior:smooth}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:400 17px/1.65 "Instrument Sans",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+body.lock{overflow:hidden}
 h1,h2,h3{font-family:Sora,system-ui,sans-serif;margin:0;line-height:1.1}
 a{color:inherit}
 :focus-visible{outline:3px solid var(--acc2);outline-offset:3px}
@@ -73,21 +74,31 @@ h2{font-size:clamp(30px,4.6vw,46px);font-weight:800;letter-spacing:-.025em;margi
 .filters button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:22px;align-items:start}
 .card{display:block;text-decoration:none;border-radius:16px;overflow:hidden;background:var(--surface);border:1px solid var(--line);transition:transform .2s,box-shadow .2s}
-a.card:hover{transform:translateY(-4px);box-shadow:0 16px 36px rgba(60,40,140,.18)}
+button.card{width:100%;padding:0;text-align:left;font:inherit;color:inherit;cursor:pointer}
+.card:not(.soon):hover{transform:translateY(-4px);box-shadow:0 16px 36px rgba(60,40,140,.18)}
 .thumb{aspect-ratio:9/13;position:relative;display:flex;align-items:flex-end;padding:14px}
 .thumb.wide{aspect-ratio:16/10}
+.thumb.pic{background-size:cover;background-position:center}
 .g0{background:linear-gradient(160deg,#6D4AFF,#1d1450)}
 .g1{background:linear-gradient(160deg,#FF6B8A,#6b1f3d)}
 .g2{background:linear-gradient(160deg,#2aa4c9,#0d3547)}
 .g3{background:linear-gradient(160deg,#f2a541,#7a3a12)}
 .tag{background:rgba(0,0,0,.45);backdrop-filter:blur(6px);color:#fff;font-size:12.5px;font-weight:600;padding:3px 11px;border-radius:999px}
 .play{position:absolute;inset:0;display:grid;place-items:center}
-.play::after{content:"";border-left:20px solid rgba(255,255,255,.92);border-top:12px solid transparent;border-bottom:12px solid transparent;margin-left:5px}
+.play::before{content:"";position:absolute;left:50%;top:50%;width:58px;height:58px;border-radius:50%;background:rgba(0,0,0,.5);transform:translate(-50%,-50%)}
+.play::after{content:"";border-left:20px solid rgba(255,255,255,.92);border-top:12px solid transparent;border-bottom:12px solid transparent;margin-left:5px;position:relative}
 .soon .play::after{display:none}
 .meta{padding:15px 17px 18px}
 .meta h3{font-size:18px;margin-bottom:4px}
 .meta p{margin:0;font-size:14.5px;color:var(--muted)}
 .empty{grid-column:1/-1;padding:30px;border:1.5px dashed var(--line);border-radius:14px;color:var(--muted);text-align:center}
+
+/* video popup */
+.modal{position:fixed;inset:0;z-index:999;background:rgba(5,4,10,.88);display:grid;place-items:center;padding:16px}
+.modal[hidden]{display:none}
+.modal-box{position:relative;height:min(86vh,820px);aspect-ratio:9/16;max-width:100%}
+.modal-box video{width:100%;height:100%;border-radius:14px;background:#000;object-fit:contain}
+.modal-close{position:absolute;top:-14px;right:-14px;width:38px;height:38px;border-radius:50%;border:0;background:#fff;color:#000;font-size:24px;line-height:1;cursor:pointer;z-index:2}
 
 /* services */
 .svc{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px}
@@ -157,6 +168,13 @@ footer .wrap{border-top:1px solid var(--herobd);padding-top:22px}
   </div>
 </section>
 
+<div class="modal" id="modal" hidden role="dialog" aria-modal="true" aria-label="Video player">
+  <div class="modal-box">
+    <button class="modal-close" id="modalClose" aria-label="Close video">&times;</button>
+    <video id="player" controls playsinline preload="none"></video>
+  </div>
+</div>
+
 <section id="services" style="padding-top:0">
   <div class="wrap">
     <h2>What I do</h2>
@@ -202,12 +220,14 @@ footer .wrap{border-top:1px solid var(--herobd);padding-top:22px}
 <script>
 /* ========== PROJECTS: add or change projects only in this list ==========
    type: "Shorts", "Reels" or "Motion"
-   url: video link (leave "" if not ready, the card shows "Coming soon")
-   Example: {title:"Gym motivation edit", type:"Reels", tools:"Premiere Pro, CapCut", url:"https://instagram.com/reel/..."} */
+   video + poster: files uploaded with the site (plays in a popup on tap)
+   url: external link (opens in a new tab). Leave both empty to show "Coming soon" */
 const PROJECTS = [
-  {title:"Your first Short",       type:"Shorts", tools:"Premiere Pro, CapCut", url:""},
-  {title:"Your first Reel",        type:"Reels",  tools:"CapCut, Premiere Pro", url:""},
-  {title:"Your first motion piece",type:"Motion", tools:"After Effects",        url:""}
+  {title:"Your first Short", type:"Shorts", tools:"Premiere Pro, CapCut", url:""},
+  {title:"Properties Marketing", type:"Reels", tools:"Premiere Pro, CapCut",
+   video:"videos/properties-marketing.mp4", poster:"posters/properties-marketing.jpg"},
+  {title:"Apple iPhone", type:"Motion", tools:"After Effects",
+   video:"videos/apple-iphone.mp4", poster:"posters/apple-iphone.jpg"}
 ];
 const TYPES = ["All","Shorts","Reels","Motion"];
 let current = "All";
@@ -227,16 +247,27 @@ function render(){
   const list = PROJECTS.filter(p=>current==="All"||p.type===current);
   if(!list.length){grid.innerHTML = '<div class="empty">No projects in this category yet.</div>';return;}
   grid.innerHTML = list.map(p=>{
-    const live = !!p.url;
+    const hasVideo = !!p.video, live = hasVideo || !!p.url;
     const tag = live ? p.type : "Coming soon";
-    const body = '<div class="thumb '+(p.type==="Motion"?"wide ":"")+(shade[p.type]||"g3")+'"><span class="tag">'+tag+'</span>'+(live?'<span class="play"></span>':'')+'</div>'+
+    const wide = (!hasVideo && p.type==="Motion") ? "wide " : "";
+    const pic = hasVideo ? ' pic" style="background-image:url('+p.poster+')' : '';
+    const body = '<div class="thumb '+wide+(shade[p.type]||"g3")+pic+'"><span class="tag">'+tag+'</span>'+(live?'<span class="play"></span>':'')+'</div>'+
       '<div class="meta"><h3>'+p.title+'</h3><p>'+p.tools+'</p></div>';
-    return live
-      ? '<a class="card" href="'+p.url+'" target="_blank" rel="noopener">'+body+'</a>'
-      : '<div class="card soon">'+body+'</div>';
+    if(hasVideo) return '<button class="card" data-video="'+p.video+'" aria-label="Play '+p.title+'">'+body+'</button>';
+    if(p.url) return '<a class="card" href="'+p.url+'" target="_blank" rel="noopener">'+body+'</a>';
+    return '<div class="card soon">'+body+'</div>';
   }).join("");
 }
 render();
+
+/* video popup */
+const modal = document.getElementById("modal"), player = document.getElementById("player");
+function openVideo(src){player.src=src;modal.hidden=false;document.body.classList.add("lock");player.play().catch(()=>{});}
+function closeVideo(){player.pause();player.removeAttribute("src");player.load();modal.hidden=true;document.body.classList.remove("lock");}
+grid.addEventListener("click",e=>{const c=e.target.closest("[data-video]");if(c)openVideo(c.dataset.video);});
+document.getElementById("modalClose").onclick = closeVideo;
+modal.addEventListener("click",e=>{if(e.target===modal)closeVideo();});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!modal.hidden)closeVideo();});
 </script>
 </body>
 </html>

@@ -26,6 +26,25 @@ a{color:inherit}
 :focus-visible{outline:3px solid var(--acc2);outline-offset:3px}
 .wrap{max-width:1120px;margin:0 auto;padding:0 24px}
 
+/* intro (photo pop-up when the site opens) */
+#intro{position:fixed;inset:0;z-index:2000;display:grid;place-items:center;background:var(--hero);color:var(--onhero);text-align:center;cursor:pointer;overflow:hidden;animation:introOut .7s ease 3s forwards}
+#intro.skip{animation:introOut .35s ease forwards}
+#intro::before,#intro::after{content:"";position:absolute;border-radius:50%;pointer-events:none}
+#intro::before{width:620px;height:620px;right:-180px;top:-220px;background:radial-gradient(circle,rgba(109,74,255,.5),transparent 65%)}
+#intro::after{width:460px;height:460px;left:-200px;bottom:-240px;background:radial-gradient(circle,rgba(255,107,138,.28),transparent 65%)}
+.intro-in{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:36px;padding:24px}
+.intro-pic{position:relative;width:min(46vw,180px);aspect-ratio:1;border-radius:50%;display:grid;place-items:center;font:800 56px Sora,sans-serif;color:#fff;background:linear-gradient(135deg,var(--acc),var(--acc2));box-shadow:0 0 70px rgba(109,74,255,.55);animation:introPop .9s cubic-bezier(.2,1.35,.4,1) .2s both}
+.intro-pic img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%}
+.intro-pic::before{content:"";position:absolute;inset:-12px;border-radius:50%;background:conic-gradient(var(--acc),var(--acc2),var(--acc));-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 3px));mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 3px));animation:introSpin 3s linear infinite}
+.intro-name{font:800 clamp(26px,6vw,40px) Sora,sans-serif;letter-spacing:-.02em;animation:introRise .7s ease .8s both}
+.intro-role{margin:-22px 0 0;color:var(--herotxt);font-size:16px;animation:introRise .7s ease 1.05s both}
+.intro-tap{position:absolute;bottom:28px;left:0;right:0;z-index:1;color:var(--herotxt);font-size:13px;opacity:.7;animation:introRise .7s ease 1.6s both}
+@keyframes introPop{from{opacity:0;transform:scale(.35);filter:blur(16px)}to{opacity:1;transform:scale(1);filter:blur(0)}}
+@keyframes introSpin{to{transform:rotate(360deg)}}
+@keyframes introRise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@keyframes introOut{to{opacity:0;visibility:hidden;transform:scale(1.05)}}
+@media(prefers-reduced-motion:reduce){#intro{display:none}}
+
 /* hero */
 .hero{background:var(--hero);color:var(--onhero);position:relative;overflow:hidden}
 .hero::before{content:"";position:absolute;width:620px;height:620px;right:-180px;top:-220px;background:radial-gradient(circle,rgba(109,74,255,.45),transparent 65%);pointer-events:none}
@@ -135,8 +154,9 @@ h2{font-size:clamp(30px,4.6vw,46px);font-weight:800;letter-spacing:-.025em;margi
 /* about */
 .about{display:grid;grid-template-columns:.8fr 1.4fr;gap:52px;align-items:center}
 @media(max-width:760px){.about{grid-template-columns:1fr;gap:30px}nav a{margin-left:16px}}
-.avatar{aspect-ratio:4/5;border-radius:20px;background:linear-gradient(155deg,var(--acc),var(--acc2));display:grid;place-items:center;color:#fff;font:800 72px Sora,sans-serif;letter-spacing:-.04em}
+.avatar{position:relative;overflow:hidden;aspect-ratio:4/5;border-radius:20px;background:linear-gradient(155deg,var(--acc),var(--acc2));display:grid;place-items:center;color:#fff;font:800 72px Sora,sans-serif;letter-spacing:-.04em}
 .about p{max-width:34em;color:var(--muted)}
+.avatar img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 
 /* contact */
 .contact{background:var(--hero);color:var(--onhero);position:relative;overflow:hidden}
@@ -150,6 +170,15 @@ footer .wrap{border-top:1px solid var(--herobd);padding-top:22px}
 </style>
 </head>
 <body>
+
+<div id="intro" aria-hidden="true">
+  <div class="intro-in">
+    <div class="intro-pic"><span>AC</span><img src="profile.jpg" alt="" data-alt="profile.jpeg,profile.png,profile.webp,Profile.jpg,Profile.jpeg" onerror="var a=(this.dataset.alt||'').split(',').filter(Boolean);if(a.length){this.dataset.alt=a.slice(1).join(',');this.src=a[0]}else{this.remove()}"></div>
+    <div class="intro-name">Aryan Chouhan</div>
+    <p class="intro-role">Video Editor and Motion Designer</p>
+  </div>
+  <div class="intro-tap">Tap to skip</div>
+</div>
 
 <div class="hero">
   <div class="wrap">
@@ -251,7 +280,7 @@ footer .wrap{border-top:1px solid var(--herobd);padding-top:22px}
 
 <section id="about" style="padding-top:0">
   <div class="wrap about">
-    <div class="avatar" role="img" aria-label="Photo of Aryan Chouhan goes here">AC</div>
+    <div class="avatar" role="img" aria-label="Aryan Chouhan"><span>AC</span><img src="profile.jpg" alt="Aryan Chouhan" loading="lazy" data-alt="profile.jpeg,profile.png,profile.webp,Profile.jpg,Profile.jpeg" onerror="var a=(this.dataset.alt||'').split(',').filter(Boolean);if(a.length){this.dataset.alt=a.slice(1).join(',');this.src=a[0]}else{this.remove()}"></div>
     <div>
       <h2>About me</h2>
       <p>Hi, I'm Aryan Chouhan, a video editor from Kota, Rajasthan. I edit short-form content and build motion graphics using Premiere Pro, After Effects and CapCut.</p>
@@ -275,24 +304,25 @@ footer .wrap{border-top:1px solid var(--herobd);padding-top:22px}
 <footer><div class="wrap">© 2026 Aryan Chouhan &nbsp;|&nbsp; CREATE YOUR SELF</div></footer>
 
 <script>
-/* ========== PROJECTS: add new videos only in this list ==========
-   type:  "Reels", "Motion", "AI" or "Shorts". Each type gets its own moving timeline row.
-   ratio: leave out for vertical 9:16, "sq" for square 1:1, "land" for landscape 16:9
-   video + poster: files uploaded with the site. They play muted on their own, tap to watch with sound. */
+/* ========== VIDEOS ==========
+   EASIEST WAY to add a video: just upload it. No code change needed.
+   Put it in the folder of its row and name it 1.mp4, 2.mp4, 3.mp4 ...
+     videos/reels/   -> Reels row
+     videos/motion/  -> Motion graphics row
+     videos/ai/      -> AI Generated row
+     videos/shorts/  -> Shorts row
+   Keep the numbers in order, with no gaps. The page finds them by itself and
+   detects vertical, square or landscape on its own.
+   The videos below are the ones already uploaded. */
 const PROJECTS = [
-  {title:"Properties Marketing", type:"Reels", tools:"Premiere Pro, CapCut",
-   video:"videos/properties-marketing.mp4", poster:"posters/properties-marketing.jpg"},
-  {title:"Apple iPhone", type:"Motion", tools:"After Effects",
-   video:"videos/apple-iphone.mp4", poster:"posters/apple-iphone.jpg"},
-  {title:"Pilgrim Shampoo Ad", type:"Motion", tools:"After Effects", ratio:"sq",
-   video:"videos/pilgrim-shampoo-ad.mp4", poster:"posters/pilgrim-shampoo-ad.jpg"},
-  {title:"Reel 01", type:"Motion", tools:"After Effects",
-   video:"videos/reel-01.mp4", poster:"posters/reel-01.jpg"},
-  {title:"Harry Potter: Book 2", type:"AI", tools:"AI generated", ratio:"sq",
-   video:"videos/harry-potter-book-2.mp4", poster:"posters/harry-potter-book-2.jpg"},
-  {title:"Harry Potter: Book 3", type:"AI", tools:"AI generated", ratio:"sq",
-   video:"videos/harry-potter-book-3.mp4", poster:"posters/harry-potter-book-3.jpg"}
+  {type:"Reels",  video:"videos/properties-marketing.mp4"},
+  {type:"Motion", video:"videos/apple-iphone.mp4"},
+  {type:"Motion", video:"videos/pilgrim-shampoo-ad.mp4", ratio:"sq"},
+  {type:"Motion", video:"videos/reel-01.mp4"},
+  {type:"AI",     video:"videos/harry-potter-book-2.mp4", ratio:"sq"},
+  {type:"AI",     video:"videos/harry-potter-book-3.mp4", ratio:"sq"}
 ];
+const FOLDERS = {Shorts:"videos/shorts/", Reels:"videos/reels/", Motion:"videos/motion/", AI:"videos/ai/"};
 const ORDER = ["Shorts","Reels","Motion","AI"];
 const INFO = {
   Shorts:{label:"Shorts", note:"Punchy vertical edits for YouTube Shorts."},
@@ -303,17 +333,20 @@ const INFO = {
 const SPEED = 45; /* pixels per second, lower is slower */
 const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const rows = document.getElementById("rows");
-const esc = t => String(t).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let ALL = PROJECTS.slice();
+const arOf = p => p.ar || (p.ratio==="sq" ? 1 : p.ratio==="land" ? 1.7778 : .5625);
+const shape = ar => ar>=1.2 ? "land" : ar>=.9 ? "sq" : "";
+const ofType = t => ALL.filter(p=>p.type===t && p.video);
 
 function card(p, clone){
-  return '<button class="vcard'+(p.ratio?" "+p.ratio:"")+'" type="button" data-video="'+p.video+'" data-ratio="'+(p.ratio||"")+'"'+
-    (clone?' tabindex="-1" aria-hidden="true"':' aria-label="Watch '+esc(p.title)+'"')+'>'+
-    '<video muted loop playsinline preload="'+(reduce?"none":"metadata")+'" poster="'+p.poster+'" src="'+p.video+'"></video>'+
-    '<span class="vmeta"><strong>'+esc(p.title)+'</strong><small>'+esc(p.tools)+'</small></span></button>';
+  const ar = arOf(p);
+  return '<button class="vcard" type="button" style="--ar:'+ar+'" data-video="'+p.video+'" data-ratio="'+shape(ar)+'"'+
+    (clone?' tabindex="-1" aria-hidden="true"':' aria-label="Open video"')+'>'+
+    '<video muted loop playsinline preload="'+(reduce?"none":"metadata")+'" src="'+p.video+'#t=0.001"></video></button>';
 }
 
 function fill(box){
-  const list = PROJECTS.filter(p=>p.type===box.dataset.type && p.video);
+  const list = ofType(box.dataset.type);
   const track = box.querySelector(".reelrow");
   track.innerHTML = list.map(p=>card(p,false)).join("");
   if(reduce) return;
@@ -353,16 +386,51 @@ let lastW = 0;
 function build(){
   lastW = rows.clientWidth;
   rows.innerHTML = ORDER.map(t=>{
-    if(!PROJECTS.some(p=>p.type===t && p.video)) return "";
-    return '<div class="wrow" id="row-'+t+'"><div class="wrow-head"><h3>'+INFO[t].label+'</h3><p>'+INFO[t].note+'</p><span class="cnt">'+PROJECTS.filter(p=>p.type===t&&p.video).length+' video'+(PROJECTS.filter(p=>p.type===t&&p.video).length>1?"s":"")+'</span></div>'+
+    const n = ofType(t).length;
+    if(!n) return "";
+    return '<div class="wrow" id="row-'+t+'"><div class="wrow-head"><h3>'+INFO[t].label+'</h3><p>'+INFO[t].note+'</p><span class="cnt">'+n+' video'+(n>1?"s":"")+'</span></div>'+
       '<div class="tlrow'+(reduce?" static":"")+'" data-type="'+t+'"><div class="reelrow"></div></div></div>';
   }).join("");
   rows.querySelectorAll(".tlrow").forEach(fill);
   watch();
 }
+
+/* find videos that were uploaded to the row folders (1.mp4, 2.mp4 ...) */
+async function exists(url){
+  try{const r = await fetch(url,{method:"HEAD"}); return r.ok && /video|octet/.test(r.headers.get("content-type")||"");}
+  catch(e){return false;}
+}
+function probe(p){
+  return new Promise(res=>{
+    const v = document.createElement("video");
+    const done = ()=>{clearTimeout(t); v.remove(); res();};
+    const t = setTimeout(done,4000);
+    v.preload = "metadata"; v.muted = true; v.playsInline = true;
+    v.style.cssText = "position:absolute;width:2px;height:2px;opacity:0;pointer-events:none";
+    v.onloadedmetadata = ()=>{if(v.videoWidth&&v.videoHeight) p.ar = v.videoWidth/v.videoHeight; done();};
+    v.onerror = done;
+    document.body.appendChild(v);
+    v.src = p.video;
+    const r = v.play(); if(r&&r.catch) r.catch(()=>{});
+  });
+}
+async function discover(){
+  const found = [];
+  await Promise.all(ORDER.map(async t=>{
+    for(let i=1;i<=40;i++){
+      const url = FOLDERS[t]+i+".mp4";
+      if(!(await exists(url))) break;
+      found.push({type:t, video:url});
+    }
+  }));
+  await Promise.all(found.map(probe));
+  return found;
+}
+
 build();
 let rt;
 addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(()=>{if(rows.clientWidth!==lastW)build();},250);});
+discover().then(f=>{ if(f.length){ ALL = PROJECTS.concat(f); build(); } });
 
 /* AI section button: jump to the AI Generated row */
 document.getElementById("seeAI").onclick = ()=>{
@@ -386,6 +454,18 @@ rows.addEventListener("click",e=>{const c=e.target.closest("[data-video]");if(c)
 document.getElementById("modalClose").onclick = closeVideo;
 modal.addEventListener("click",e=>{if(e.target===modal)closeVideo();});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!modal.hidden)closeVideo();});
+
+/* intro: lock scrolling while it plays, tap to skip, remove when finished */
+(function(){
+  const el = document.getElementById("intro");
+  if(!el) return;
+  if(matchMedia("(prefers-reduced-motion: reduce)").matches){el.remove();return;}
+  document.body.classList.add("lock");
+  const finish = ()=>{ if(el.isConnected) el.remove(); document.body.classList.remove("lock"); };
+  el.addEventListener("animationend",e=>{if(e.animationName==="introOut") finish();});
+  el.addEventListener("click",()=>el.classList.add("skip"));
+  setTimeout(finish,4500);
+})();
 </script>
 </body>
 </html>
